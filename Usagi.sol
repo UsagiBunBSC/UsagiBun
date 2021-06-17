@@ -1,5 +1,3 @@
-
-
 pragma solidity ^0.6.12;
 // SPDX-License-Identifier: Unlicensed
 interface IERC20 {
@@ -208,30 +206,12 @@ contract Ownable is Context {
         _owner = newOwner;
     }
 
-    function geUnlockTime() public view returns (uint256) {
-        return _lockTime;
-    }
-
-   
-    function lock(uint256 time) public virtual onlyOwner {
-        _previousOwner = _owner;
-        _owner = address(0);
-        _lockTime = now + time;
-        emit OwnershipTransferred(_owner, address(0));
-    }
     
-   
-    function unlock() public virtual {
-        require(_previousOwner == msg.sender, "You don't have permission to unlock");
-        require(now > _lockTime , "Contract is locked until 7 days");
-        emit OwnershipTransferred(_owner, _previousOwner);
-        _owner = _previousOwner;
-    }
 }
 
 
 
-contract usagi is Context, IERC20, Ownable {
+contract Usagi is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -258,10 +238,6 @@ contract usagi is Context, IERC20, Ownable {
     
     uint256 public _burnFee = 0;
     uint256 private _previousBurnFee = _burnFee;
-
-    uint256 public _charityFee = 0;
-    address public charityWallet;
-    uint256 private _previousCharityFee = _charityFee;
 
     
     uint256 public _maxTxAmount = 1000000000000 * 10**9;
@@ -497,18 +473,17 @@ contract usagi is Context, IERC20, Ownable {
         
       
         uint256 burnAmt = amount.mul(_burnFee).div(100);
-        uint256 charityAmt = amount.mul(_charityFee).div(100);
 
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferFromExcluded(sender, recipient, (amount.sub(burnAmt).sub(charityAmt)));
+            _transferFromExcluded(sender, recipient, (amount.sub(burnAmt)));
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
-            _transferToExcluded(sender, recipient, (amount.sub(burnAmt).sub(charityAmt)));
+            _transferToExcluded(sender, recipient, (amount.sub(burnAmt)));
         } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferStandard(sender, recipient, (amount.sub(burnAmt).sub(charityAmt)));
+            _transferStandard(sender, recipient, (amount.sub(burnAmt)));
         } else if (_isExcluded[sender] && _isExcluded[recipient]) {
-            _transferBothExcluded(sender, recipient, (amount.sub(burnAmt).sub(charityAmt)));
+            _transferBothExcluded(sender, recipient, (amount.sub(burnAmt)));
         } else {
-            _transferStandard(sender, recipient, (amount.sub(burnAmt).sub(charityAmt)));
+            _transferStandard(sender, recipient, (amount.sub(burnAmt)));
         }
         
        
@@ -516,8 +491,6 @@ contract usagi is Context, IERC20, Ownable {
 
       
         _transferStandard(sender, address(0), burnAmt);
-        _transferStandard(sender, charityWallet, charityAmt);
-
        
         _taxFee = _previousTaxFee;
 

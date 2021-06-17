@@ -1,0 +1,2 @@
+# UsagiBun
+UsagiBun contract
